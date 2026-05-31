@@ -43,6 +43,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -453,7 +455,17 @@ private fun PostList(
                 )
             }
         }
+
         item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
+
+        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
+            item {
+                PostListPopularSection(
+                    postsFeed.popularPosts, onArticleTapped,
+                )
+            }
+        }
+
         if (postsFeed.recommendedPosts.isNotEmpty()) {
             item {
                 PostListSimpleSection(
@@ -464,13 +476,7 @@ private fun PostList(
                 )
             }
         }
-        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
-            item {
-                PostListPopularSection(
-                    postsFeed.popularPosts, onArticleTapped,
-                )
-            }
-        }
+
         if (postsFeed.recentPosts.isNotEmpty()) {
             item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
         }
@@ -551,6 +557,22 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
             text = stringResource(id = R.string.home_popular_section_title),
             style = MaterialTheme.typography.titleLarge,
         )
+
+        LazyRow(
+            modifier = Modifier
+                .padding(horizontal = 16.dp),
+//            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(items = posts) { post ->
+                PostCardPopular(
+                    post,
+                    navigateToArticle,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
