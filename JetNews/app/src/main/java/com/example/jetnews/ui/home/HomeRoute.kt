@@ -56,7 +56,7 @@ fun HomeRoute(
         onToggleFavorite = { homeViewModel.toggleFavourite(it) },
         onSelectPost = { homeViewModel.selectArticle(it) },
 //        onRefreshPosts = { homeViewModel.refreshPosts() },
-
+        // calls my new Flow fun to retrieve data
         onRefreshPosts = { homeViewModel.executeRefresh() },
 
         onErrorDismiss = { homeViewModel.errorShown(it) },
