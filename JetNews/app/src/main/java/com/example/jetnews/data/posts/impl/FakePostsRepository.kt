@@ -25,6 +25,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
@@ -38,6 +40,8 @@ class FakePostsRepository : PostsRepository {
     private val favorites = MutableStateFlow<Set<String>>(setOf())
 
     private val postsFeed = MutableStateFlow<PostsFeed?>(null)
+
+    private val postsFlowFeed = MutableStateFlow<Result<PostsFeed>?>(Result.Loading(""))
 
     // Used to make suspend functions that read and update state safe to call from any thread
 
@@ -63,6 +67,17 @@ class FakePostsRepository : PostsRepository {
             }
         }
     }
+
+
+    override suspend fun getFlowPostsFeed(): Flow<Result<PostsFeed>>  {
+        return postsFlowFeed.asStateFlow().collect {
+           it
+        }
+    }
+
+    override val flowPostsFeed: Flow<Result<PostsFeed>>
+        get() = flow { emit(Result.Success(posts)) }
+
 
     override fun observeFavorites(): Flow<Set<String>> = favorites
     override fun observePostsFeed(): Flow<PostsFeed?> = postsFeed

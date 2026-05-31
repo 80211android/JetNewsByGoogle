@@ -55,7 +55,10 @@ fun HomeRoute(
         isExpandedScreen = isExpandedScreen,
         onToggleFavorite = { homeViewModel.toggleFavourite(it) },
         onSelectPost = { homeViewModel.selectArticle(it) },
-        onRefreshPosts = { homeViewModel.refreshPosts() },
+//        onRefreshPosts = { homeViewModel.refreshPosts() },
+
+        onRefreshPosts = { homeViewModel.executeRefresh() },
+
         onErrorDismiss = { homeViewModel.errorShown(it) },
         onInteractWithFeed = { homeViewModel.interactedWithFeed() },
         onInteractWithArticleDetails = { homeViewModel.interactedWithArticleDetails(it) },

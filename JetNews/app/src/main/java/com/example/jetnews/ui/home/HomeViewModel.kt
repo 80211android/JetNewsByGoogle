@@ -22,16 +22,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.jetnews.R
 import com.example.jetnews.data.Result
 import com.example.jetnews.data.posts.PostsRepository
+import com.example.jetnews.data.successOr
 import com.example.jetnews.model.Post
 import com.example.jetnews.model.PostsFeed
 import com.example.jetnews.utils.ErrorMessage
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.collections.plus
 
 /**
  * UI state for the Home route.
@@ -116,6 +121,9 @@ private data class HomeViewModelState(
  */
 class HomeViewModel(private val postsRepository: PostsRepository, preSelectedPostId: String?) : ViewModel() {
 
+    private val _posts = MutableStateFlow<Result<PostsFeed>>(Result.Loading("LOADING"))
+    val posts: StateFlow<Result<PostsFeed>> = _posts.asStateFlow()
+
     private val viewModelState = MutableStateFlow(
         HomeViewModelState(
             isLoading = true,
@@ -134,10 +142,12 @@ class HomeViewModel(private val postsRepository: PostsRepository, preSelectedPos
         )
 
     init {
-        refreshPosts()
+//        refreshPosts()
 
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
+            refreshFlowPosts()
+
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
             }
@@ -157,6 +167,10 @@ class HomeViewModel(private val postsRepository: PostsRepository, preSelectedPos
                 when (result) {
                     is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
 
+                    is Result.Loading -> {
+                        it.copy(postsFeed = null, isLoading = true)
+                    }
+
                     is Result.Error -> {
                         val errorMessages = it.errorMessages + ErrorMessage(
                             id = UUID.randomUUID().mostSignificantBits,
@@ -164,6 +178,40 @@ class HomeViewModel(private val postsRepository: PostsRepository, preSelectedPos
                         )
                         it.copy(errorMessages = errorMessages, isLoading = false)
                     }
+                }
+            }
+        }
+    }
+
+    fun executeRefresh() {
+        viewModelScope.launch {
+            refreshFlowPosts()
+        }
+    }
+
+    suspend fun refreshFlowPosts() {
+        // Ui state is refreshing
+        viewModelState.update { it.copy(isLoading = true) }
+
+        viewModelScope.launch {
+            _posts.value = Result.Loading("LOADS")
+
+            postsRepository.flowPostsFeed.catch { throwable ->
+
+                val errorMessages = "throwable.errorMessages" + ErrorMessage(
+                    id = UUID.randomUUID().mostSignificantBits,
+                    messageId = R.string.load_error,
+                )
+
+                _posts.value = Result.Error(Exception(errorMessages))
+            }.collect { posts ->
+
+                _posts.value = posts
+
+                viewModelState.update { it ->
+                    val postings = (posts as Result.Success).data
+                    it.copy(postsFeed = postings, isLoading = false)
+
                 }
             }
         }
