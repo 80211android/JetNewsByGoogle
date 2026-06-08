@@ -16,10 +16,12 @@
 
 package com.example.jetnews.ui.home
 
+import android.R.attr.value
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -55,6 +57,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -80,9 +84,11 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -570,7 +576,45 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
         label = "alpha"
     )
 
+//    var expanded by remember { mutableStateOf(value: false) }
+
+    var expanded: MutableState<Boolean> = remember { mutableStateOf(value = false) }
+
     Column {
+
+        Column(modifier = Modifier.padding(start = 14.dp)) {
+            Button(
+                onClick = { expanded.value = !expanded.value },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red,
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray, // Background when disabled
+                    disabledContentColor = Color.LightGray // Text when disabled
+                )
+            ) {
+                Text(text = if (expanded.value) "SHRINK" else "EXPAND")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .background(Color.Yellow)
+                    .animateContentSize()
+            ) {
+                Text(
+                    text = stringResource(R.string.display_text),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.padding(16.dp),
+                    maxLines = if (expanded.value) Int.MAX_VALUE else 2
+                )
+            }
+        }
+
+        Row(modifier = Modifier.padding( start = 12.dp, end = 14.dp)) {
+
+        }
 
         Spacer(Modifier.height(8.dp))
 

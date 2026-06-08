@@ -40,6 +40,8 @@
     <string name="home_post_based_on_history">BASED ON YOUR HISTORY</string>
     <string name="home_search">Search articles</string>
 
+    <string name="display_text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library, took a 1914 Cicero translation and scrambled it to make dummy text for Letrasets Body Type sheets. It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised thanks to these sheets and more recently with desktop publishing software including versions of Lorem Ipsum.</string>
+
     <!-- Article Screen -->
     <string name="article_functionality_not_available">Functionality not available \uD83D\uDE48</string>
     <string name="article_share_post">Share post</string>
