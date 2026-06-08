@@ -571,6 +571,9 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
     )
 
     Column {
+
+        Spacer(Modifier.height(8.dp))
+
         Text(
             modifier = Modifier.padding(16.dp),
             text = stringResource(id = R.string.home_popular_section_title),
@@ -639,6 +642,15 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
         }
 
         Spacer(Modifier.height(38.dp))
+
+        Text(
+            modifier = Modifier.padding(
+                start = 20.dp,
+                bottom = 12.dp
+                ),
+            text = stringResource(id = R.string.home_popular_section_title),
+            style = MaterialTheme.typography.titleLarge,
+        )
 
         LazyRow(
             modifier = Modifier
