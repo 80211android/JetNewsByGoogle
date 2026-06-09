@@ -91,6 +91,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -576,23 +577,21 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
         label = "alpha"
     )
 
-//    var expanded by remember { mutableStateOf(value: false) }
-
-    var expanded: MutableState<Boolean> = remember { mutableStateOf(value = false) }
+    var expanded by remember { mutableStateOf(value = false) }
 
     Column {
 
         Column(modifier = Modifier.padding(start = 14.dp)) {
             Button(
-                onClick = { expanded.value = !expanded.value },
+                onClick = { expanded = !expanded },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red,
-                    contentColor = Color.White,
+                    contentColor = if (expanded) Color.White else Color.Black,
                     disabledContainerColor = Color.Gray, // Background when disabled
                     disabledContentColor = Color.LightGray // Text when disabled
                 )
             ) {
-                Text(text = if (expanded.value) "SHRINK" else "EXPAND")
+                Text(text = if (expanded) "COLLAPSE" else "EXPAND")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -607,7 +606,7 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
                     fontSize = 16.sp,
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.padding(16.dp),
-                    maxLines = if (expanded.value) Int.MAX_VALUE else 2
+                    maxLines = if (expanded) Int.MAX_VALUE else 2
                 )
             }
         }
