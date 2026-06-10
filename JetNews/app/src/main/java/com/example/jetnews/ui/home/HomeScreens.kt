@@ -16,7 +16,6 @@
 
 package com.example.jetnews.ui.home
 
-import android.R.attr.value
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
@@ -56,7 +55,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -84,10 +82,10 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -118,6 +116,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetnews.R
 import com.example.jetnews.data.Result
 import com.example.jetnews.data.posts.impl.BlockingFakePostsRepository
@@ -155,6 +154,7 @@ fun HomeFeedWithArticleDetailsScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
     HomeScreenWithList(
         uiState = uiState,
@@ -179,6 +179,7 @@ fun HomeFeedWithArticleDetailsScreen(
                 state = homeListLazyListState,
                 searchInput = hasPostsUiState.searchInput,
                 onSearchInputChanged = onSearchInputChanged,
+                myHomeViewModel = myHomeViewModel
             )
             // Crossfade between different detail posts
             Crossfade(
@@ -258,6 +259,7 @@ fun HomeFeedScreen(
     modifier: Modifier = Modifier,
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
     HomeScreenWithList(
         uiState = uiState,
@@ -279,6 +281,7 @@ fun HomeFeedScreen(
             state = homeListLazyListState,
             searchInput = searchInput,
             onSearchInputChanged = onSearchInputChanged,
+            myHomeViewModel = myHomeViewModel
         )
     }
 }
@@ -459,7 +462,13 @@ private fun PostList(
     state: LazyListState = rememberLazyListState(),
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
+
+//    val helloViewModel: HelloViewModel = viewModel()
+
+    val name: String by myHomeViewModel.name.observeAsState(initial = "")
+
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
@@ -480,7 +489,10 @@ private fun PostList(
         if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
             item {
                 PostListPopularSection(
-                    postsFeed.popularPosts, onArticleTapped,
+                    postsFeed.popularPosts,
+                    onArticleTapped,
+                    name = name,
+                    onNameChange = { myHomeViewModel.onNameChange(it) }
                 )
             }
         }
@@ -569,7 +581,12 @@ private fun PostListSimpleSection(
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
-private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String) -> Unit) {
+private fun PostListPopularSection(
+    posts: List<Post>,
+    navigateToArticle: (String) -> Unit,
+    name: String = "",
+    onNameChange: ((String) -> Unit) = {}
+) {
 
     val alpha by animateFloatAsState(
         targetValue = if (true) 0.6f else 1f,
@@ -610,6 +627,33 @@ private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+
+        Column (modifier = Modifier.padding(start = 42.dp),) {
+
+//            var name by remember { mutableStateOf("") }
+
+            Text(
+                modifier = Modifier.padding(bottom = 8.dp),
+                text = name,
+                style = MaterialTheme.typography.displaySmall
+            )
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = onNameChange,
+                label = { Text("TheName")}
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+//        Column(modifier = Modifier.padding(start = 14.dp)) {
+//
+//        }
 
         Row(modifier = Modifier.padding( start = 12.dp, end = 14.dp)) {
 
@@ -901,6 +945,7 @@ fun PreviewHomeListDrawerScreen() {
             homeListLazyListState = rememberLazyListState(),
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }
@@ -937,6 +982,7 @@ fun PreviewHomeListNavRailScreen() {
             homeListLazyListState = rememberLazyListState(),
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }
@@ -976,6 +1022,7 @@ fun PreviewHomeListDetailScreen() {
             },
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }

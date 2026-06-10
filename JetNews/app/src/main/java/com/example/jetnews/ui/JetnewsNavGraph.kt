@@ -28,6 +28,7 @@ import com.example.jetnews.JetnewsApplication.Companion.JETNEWS_APP_URI
 import com.example.jetnews.data.AppContainer
 import com.example.jetnews.ui.home.HomeRoute
 import com.example.jetnews.ui.home.HomeViewModel
+import com.example.jetnews.ui.home.MyHomeViewModel
 import com.example.jetnews.ui.interests.InterestsRoute
 import com.example.jetnews.ui.interests.InterestsViewModel
 
@@ -62,10 +63,15 @@ fun JetnewsNavGraph(
                     preSelectedPostId = navBackStackEntry.arguments?.getString(POST_ID),
                 ),
             )
+
+            val myHomeViewModel: MyHomeViewModel = viewModel()
+
+
             HomeRoute(
                 homeViewModel = homeViewModel,
                 isExpandedScreen = isExpandedScreen,
                 openDrawer = openDrawer,
+                myHomeViewModel = myHomeViewModel
             )
         }
         composable(JetnewsDestinations.INTERESTS_ROUTE) {
