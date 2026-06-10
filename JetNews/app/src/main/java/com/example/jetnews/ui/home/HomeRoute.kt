@@ -46,6 +46,7 @@ fun HomeRoute(
     isExpandedScreen: Boolean,
     openDrawer: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    myHomeViewModel: MyHomeViewModel
 ) {
     // UiState of the HomeScreen
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -55,13 +56,17 @@ fun HomeRoute(
         isExpandedScreen = isExpandedScreen,
         onToggleFavorite = { homeViewModel.toggleFavourite(it) },
         onSelectPost = { homeViewModel.selectArticle(it) },
-        onRefreshPosts = { homeViewModel.refreshPosts() },
+//        onRefreshPosts = { homeViewModel.refreshPosts() },
+        // calls my new Flow fun to retrieve data
+        onRefreshPosts = { homeViewModel.executeRefresh() },
+
         onErrorDismiss = { homeViewModel.errorShown(it) },
         onInteractWithFeed = { homeViewModel.interactedWithFeed() },
         onInteractWithArticleDetails = { homeViewModel.interactedWithArticleDetails(it) },
         onSearchInputChanged = { homeViewModel.onSearchInputChanged(it) },
         openDrawer = openDrawer,
         snackbarHostState = snackbarHostState,
+        myHomeViewModel = myHomeViewModel
     )
 }
 
@@ -95,6 +100,7 @@ fun HomeRoute(
     onSearchInputChanged: (String) -> Unit,
     openDrawer: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    myHomeViewModel: MyHomeViewModel
 ) {
     // Construct the lazy list states for the list and the details outside of deciding which one to
     // show. This allows the associated state to survive beyond that decision, and therefore
@@ -126,6 +132,7 @@ fun HomeRoute(
                 articleDetailLazyListStates = articleDetailLazyListStates,
                 snackbarHostState = snackbarHostState,
                 onSearchInputChanged = onSearchInputChanged,
+                myHomeViewModel = myHomeViewModel
             )
         }
 
@@ -141,6 +148,7 @@ fun HomeRoute(
                 homeListLazyListState = homeListLazyListState,
                 snackbarHostState = snackbarHostState,
                 onSearchInputChanged = onSearchInputChanged,
+                myHomeViewModel = myHomeViewModel
             )
         }
 

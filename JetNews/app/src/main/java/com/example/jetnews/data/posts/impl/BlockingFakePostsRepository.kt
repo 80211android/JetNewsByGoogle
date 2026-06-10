@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
@@ -55,6 +56,15 @@ class BlockingFakePostsRepository : PostsRepository {
         postsFeed.update { posts }
         return Result.Success(posts)
     }
+
+    override suspend fun getFlowPostsFeed(): Flow<Result<PostsFeed>> {
+        val thePosts = Result.Success(posts)
+        return flow { emit(Result.Success(posts)) }
+    }
+
+    override val flowPostsFeed: Flow<Result<PostsFeed>> =
+        flow { emit(Result.Success(posts)) }
+
 
     override fun observeFavorites(): Flow<Set<String>> = favorites
     override fun observePostsFeed(): Flow<PostsFeed?> = postsFeed

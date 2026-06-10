@@ -56,7 +56,8 @@ fun PostCardPopular(post: Post, navigateToArticle: (String) -> Unit, modifier: M
         onClick = { navigateToArticle(post.id) },
         shape = MaterialTheme.shapes.medium,
         modifier = modifier
-            .width(280.dp),
+            .width(280.dp)
+            .padding(horizontal = 20.dp),
     ) {
         Column {
             Image(

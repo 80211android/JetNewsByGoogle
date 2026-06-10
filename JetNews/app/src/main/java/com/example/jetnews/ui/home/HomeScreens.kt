@@ -20,8 +20,12 @@ import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +41,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -50,6 +55,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,12 +85,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -93,12 +108,15 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetnews.R
 import com.example.jetnews.data.Result
 import com.example.jetnews.data.posts.impl.BlockingFakePostsRepository
@@ -136,6 +154,7 @@ fun HomeFeedWithArticleDetailsScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
     HomeScreenWithList(
         uiState = uiState,
@@ -160,6 +179,7 @@ fun HomeFeedWithArticleDetailsScreen(
                 state = homeListLazyListState,
                 searchInput = hasPostsUiState.searchInput,
                 onSearchInputChanged = onSearchInputChanged,
+                myHomeViewModel = myHomeViewModel
             )
             // Crossfade between different detail posts
             Crossfade(
@@ -239,6 +259,7 @@ fun HomeFeedScreen(
     modifier: Modifier = Modifier,
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
     HomeScreenWithList(
         uiState = uiState,
@@ -260,6 +281,7 @@ fun HomeFeedScreen(
             state = homeListLazyListState,
             searchInput = searchInput,
             onSearchInputChanged = onSearchInputChanged,
+            myHomeViewModel = myHomeViewModel
         )
     }
 }
@@ -440,7 +462,13 @@ private fun PostList(
     state: LazyListState = rememberLazyListState(),
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    myHomeViewModel: MyHomeViewModel
 ) {
+
+//    val helloViewModel: HelloViewModel = viewModel()
+
+    val name: String by myHomeViewModel.name.observeAsState(initial = "")
+
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
@@ -461,7 +489,10 @@ private fun PostList(
         if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
             item {
                 PostListPopularSection(
-                    postsFeed.popularPosts, onArticleTapped,
+                    postsFeed.popularPosts,
+                    onArticleTapped,
+                    name = name,
+                    onNameChange = { myHomeViewModel.onNameChange(it) }
                 )
             }
         }
@@ -550,10 +581,160 @@ private fun PostListSimpleSection(
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
-private fun PostListPopularSection(posts: List<Post>, navigateToArticle: (String) -> Unit) {
+private fun PostListPopularSection(
+    posts: List<Post>,
+    navigateToArticle: (String) -> Unit,
+    name: String = "",
+    onNameChange: ((String) -> Unit) = {}
+) {
+
+    val alpha by animateFloatAsState(
+        targetValue = if (true) 0.6f else 1f,
+        animationSpec = tween(300),
+        label = "alpha"
+    )
+
+    var expanded by remember { mutableStateOf(value = false) }
+
     Column {
+
+        Column(modifier = Modifier.padding(start = 14.dp)) {
+            Button(
+                onClick = { expanded = !expanded },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red,
+                    contentColor = if (expanded) Color.White else Color.Black,
+                    disabledContainerColor = Color.Gray, // Background when disabled
+                    disabledContentColor = Color.LightGray // Text when disabled
+                )
+            ) {
+                Text(text = if (expanded) "COLLAPSE" else "EXPAND")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .background(Color.Yellow)
+                    .animateContentSize()
+            ) {
+                Text(
+                    text = stringResource(R.string.display_text),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.padding(16.dp),
+                    maxLines = if (expanded) Int.MAX_VALUE else 2
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+
+        Column (modifier = Modifier.padding(start = 42.dp),) {
+
+//            var name by remember { mutableStateOf("") }
+
+            Text(
+                modifier = Modifier.padding(bottom = 8.dp),
+                text = name,
+                style = MaterialTheme.typography.displaySmall
+            )
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = onNameChange,
+                label = { Text("TheName")}
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+//        Column(modifier = Modifier.padding(start = 14.dp)) {
+//
+//        }
+
+        Row(modifier = Modifier.padding( start = 12.dp, end = 14.dp)) {
+
+        }
+
+        Spacer(Modifier.height(8.dp))
+
         Text(
             modifier = Modifier.padding(16.dp),
+            text = stringResource(id = R.string.home_popular_section_title),
+            style = MaterialTheme.typography.titleLarge,
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF667eea),
+                            Color(0xFF764ba2)
+                        )
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(alpha)
+                    .padding(38.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Logo/Icon
+                Card(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .padding(bottom = 32.dp),
+                    shape = RoundedCornerShape(60.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = "App Logo",
+                            modifier = Modifier.size(60.dp),
+                            tint = Color(0xFF667eea)
+                        )
+                    }
+                }
+
+                // Welcome Text
+                Text(
+                    text = "Welcome Back!",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Text(
+                    text = "Sign in to continue",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(38.dp))
+
+        Text(
+            modifier = Modifier.padding(
+                start = 20.dp,
+                bottom = 12.dp
+                ),
             text = stringResource(id = R.string.home_popular_section_title),
             style = MaterialTheme.typography.titleLarge,
         )
@@ -764,6 +945,7 @@ fun PreviewHomeListDrawerScreen() {
             homeListLazyListState = rememberLazyListState(),
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }
@@ -800,6 +982,7 @@ fun PreviewHomeListNavRailScreen() {
             homeListLazyListState = rememberLazyListState(),
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }
@@ -839,6 +1022,7 @@ fun PreviewHomeListDetailScreen() {
             },
             snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {},
+            myHomeViewModel = viewModel()
         )
     }
 }

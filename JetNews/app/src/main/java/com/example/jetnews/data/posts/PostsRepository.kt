@@ -36,6 +36,11 @@ interface PostsRepository {
      */
     suspend fun getPostsFeed(): Result<PostsFeed>
 
+    suspend fun getFlowPostsFeed(): Flow<Result<PostsFeed>>
+
+
+    val flowPostsFeed: Flow<Result<PostsFeed>>
+
     /**
      * Observe the current favorites
      */
